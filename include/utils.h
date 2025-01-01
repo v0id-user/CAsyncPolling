@@ -18,6 +18,8 @@
 
 #define FIBER_STACK_SIZE (64*1024)
 
+#define CONTEXT_POINTER void*
+
 // Error handling
 #define HANDLE_ERROR(msg) do { \
     fprintf(stderr, "[ERROR] %s (%s)\n", msg, strerror(errno)); \

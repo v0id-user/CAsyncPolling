@@ -5,16 +5,17 @@
 #ifndef POLL_H
 #define POLL_H
 
+#include "func.h"
+#include <stdint.h>
+
 #define DEFAULT_POLL_CAPACITY 10
 
-typedef void (*function)(void*);
-
-
+    
 struct poll_ctx{
-    function* functions;
-    int size;
-    int capacity;
-    int index;
+    func_t* functions;
+    int32_t size;
+    int32_t capacity;
+    int32_t index;
 };
 
 struct poll{

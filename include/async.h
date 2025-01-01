@@ -18,7 +18,7 @@ typedef struct async async;
 
 async* async_init();
 async* await(async* self,function f);
-async* async_yeild(async* self);
+async* yeild(async* self);
 void async_free(async* self);
 
 #endif
