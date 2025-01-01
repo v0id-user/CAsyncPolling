@@ -1,5 +1,7 @@
 src = [
     'main.c',
+    'async.c',
+    'asyncio.c',
 ]
 
 executable(
