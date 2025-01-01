@@ -12,6 +12,11 @@ for cross platform support.
 ## 2. How will I do it?
 Welp, there is a way with longjmp and setjmp or I could try to learn how to manipulate the EIP and ESP stack and registers for linux. On windows I could use the fibers apis todo it, but yet I don't know if they are easy to manage as polling.
 
+### UPDATE
+In [Thoughts.md](THOUGHTS.md), I came across a blog post that discusses exactly what I plan to implement. It's called Cooperative Multitasking and relies on context switching and yielding.  
+
+On Windows, there’s an API for this called `Fiber`, while on Unix, the equivalent is `ucontext`. However, the issue with Unix is that `ucontext` is not a standard POSIX API, so I’ll need to find a workaround for it.  
+
 ## 3. End result
 I will understand much better how async works in a simple way under the hood, and the code that I will write will look like:
 ```c
