@@ -8,7 +8,12 @@
     #define DEBUG_PRINT(...) BLOCK(printf("[%s:%d] ", __FILE__, __LINE__); \
                         printf(__VA_ARGS__); \
                         printf("\n"))
+
+    #define DEBUG_ERROR
 #else
     #define DEBUG_PRINT(...) BLOCK(0;) 
 #endif
+
+
+
 #endif

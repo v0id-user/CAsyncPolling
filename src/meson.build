@@ -2,6 +2,8 @@ src = [
     'main.c',
     'async.c',
     'asyncio.c',
+    'poll.c',
+    'scheduler.c',
 ]
 
 executable(

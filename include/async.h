@@ -1,16 +1,23 @@
 /*
- The async is responsible for managing the state of the async function and the event loop.
+ The async is responsible for managing the state of the async function.
 */
 #ifndef ASYNC_H
 #define ASYNC_H
 
 #include "poll.h"
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <ucontext.h>
+#endif
+
 typedef struct async_state async_state; 
 
 struct async {
     poll_t* poll;
     async_state* state;
+    void (*wait)(struct async*);
 };
 
 
