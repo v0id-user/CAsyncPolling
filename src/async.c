@@ -1,5 +1,5 @@
 #include "async.h"
-#include "utils.h"
+#include "pprint.h"
 #include "poll.h"
 
 #include <stdbool.h>
@@ -10,7 +10,7 @@ struct async_state{
     bool is_running;
 };
 
-void wait(async* self){
+void async_wait(async* self){
     self->poll->wait(self->poll);
 }
 
@@ -29,6 +29,14 @@ async* async_init(){
     }
 
     // Converting the main thread to a fiber so we can return to it
+    #ifdef _WIN32
     self->state->main_thread = ConvertThreadToFiber(NULL);
+    #else
+    self->state->main_thread = malloc(sizeof(ucontext_t));
+    int r = getcontext(self->state->main_thread);
+    if (r != 0) {
+        HANDLE_ERROR("Failed to get context");
+    }
+    #endif
     return self;
 }
