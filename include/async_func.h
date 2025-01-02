@@ -9,17 +9,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef void (*function)(void *);
+typedef void (*async_function)(void *, void *);
 
-struct func
+struct async_func
 {
     CONTEXT_POINTER self;
     int32_t id;
 
-    function f;
+    async_function f;
     void *arg;
 };
 
-typedef struct func func_t;
+typedef struct async_func async_func_t;
 
 #endif

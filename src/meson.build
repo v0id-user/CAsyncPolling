@@ -5,10 +5,11 @@ lib_src = [
     'scheduler.c',
 ]
 
-async_lib = library('async',
+async_lib = static_library('async',
     lib_src,
-    include_directories: include_dirs)
-
+    include_directories: include_dirs,
+    name_prefix: '',  # Avoid 'lib' prefix on Windows
+    install: false)
 
 executable(
     'polling_app', 

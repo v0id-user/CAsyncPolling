@@ -2,6 +2,7 @@
 #include "poll.h"
 #include "pprint.h"
 #include "scheduler.h"
+#include "async_func.h" 
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -14,18 +15,15 @@ struct async_state
     bool is_running;
 };
 
-static void async_run(async_ctx *self_ctx, function f, void *arg){
+static void async_run(async_ctx *self_ctx, async_func_t *f){
     // Chain in the poll
-
     if (self_ctx->poll == NULL)
     {
         HANDLE_ERROR("ASYNC_RUN: Poll is NULL");
     }
 
     poll_t *poll = self_ctx->poll;
-
-    poll->chain(poll->ctx, f, arg);
-
+    poll->chain(poll->ctx, f, self_ctx);
 }
 
 async *async_init()
@@ -53,6 +51,11 @@ async *async_init()
         HANDLE_ERROR("Failed to allocate memory for async_state");
         return NULL;
     }
+
+    // Initialize ctx pointers to NULL
+    self->ctx->poll = NULL;
+    self->ctx->state = NULL;
+
     self->ctx->state = (async_state *)malloc(sizeof(async_state));
     if (self->ctx->state == NULL)
     {
@@ -61,17 +64,25 @@ async *async_init()
         return NULL;
     }
 
-    self->ctx->state->schedular = schedular_new();
-
-    // Initialize state members
-    self->ctx->state->is_running  = false;
+    // Initialize state pointers to NULL
+    self->ctx->state->schedular = NULL;
     self->ctx->state->main_thread = NULL;
+    self->ctx->state->is_running = false;
+    self->ctx->state->current_function_index = 0;
+
+    self->ctx->state->schedular = schedular_new();
+    if (self->ctx->state->schedular == NULL)
+    {
+        async_free(self);
+        HANDLE_ERROR("Failed to create scheduler");
+        return NULL;
+    }
 
 // Initialize the context/fiber
 #ifdef _WIN32
     DEBUG_PRINT("Converting thread to fiber");
-    self->ctx->main_thread = ConvertThreadToFiber(NULL);
-    if (self->ctx->main_thread == NULL)
+    self->ctx->state->main_thread = ConvertThreadToFiber(NULL);
+    if (self->ctx->state->main_thread == NULL)
     {
         async_free(self);
         HANDLE_ERROR("Failed to convert thread to fiber");
@@ -112,35 +123,53 @@ async *async_init()
     return self;
 }
 
-
-
 void async_free(async *self)
 {
     DEBUG_PRINT("Freeing async");
-    if (self != NULL)
-    {
-        if (self->ctx->poll != NULL)
-        {
-            poll_free(self->ctx->poll);
-            self->ctx->poll = NULL;
-        }
-        if (self->ctx != NULL)
-        {
-            if (self->ctx->state->main_thread != NULL)
-            {
-                DEBUG_PRINT("Freeing main_thread");
-                free(self->ctx->state->main_thread);
-                self->ctx->state->main_thread = NULL;
-            }
-            DEBUG_PRINT("Freeing state");
-            free(self->ctx->state);
-            self->ctx->state = NULL;
-
-            DEBUG_PRINT("Freeing ctx");
-            free(self->ctx);
-            self->ctx = NULL;
-        }
-        DEBUG_PRINT("Freeing async");
-        free(self);
+    if (self == NULL) {
+        return;
     }
+
+    if (self->ctx == NULL) {
+        free(self);
+        return;
+    }
+
+    // Free poll if it exists
+    if (self->ctx->poll != NULL) {
+        poll_free(self->ctx->poll);
+        self->ctx->poll = NULL;
+    }
+
+    // Free state and its contents if they exist
+    if (self->ctx->state != NULL) {
+        if (self->ctx->state->schedular != NULL) {
+            schedular_free(self->ctx->state->schedular);
+            self->ctx->state->schedular = NULL;
+        }
+
+        if (self->ctx->state->main_thread != NULL) {
+            DEBUG_PRINT("Freeing main_thread");
+#ifdef _WIN32
+            // Convert back to thread before freeing
+            if (!ConvertFiberToThread()) {
+                DEBUG_PRINT("Warning: Failed to convert fiber back to thread");
+            }
+#else
+            free(self->ctx->state->main_thread);
+#endif
+            self->ctx->state->main_thread = NULL;
+        }
+
+        DEBUG_PRINT("Freeing state");
+        free(self->ctx->state);
+        self->ctx->state = NULL;
+    }
+
+    DEBUG_PRINT("Freeing ctx");
+    free(self->ctx);
+    self->ctx = NULL;
+
+    DEBUG_PRINT("Freeing async");
+    free(self);
 }

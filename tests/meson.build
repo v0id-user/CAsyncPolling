@@ -9,9 +9,9 @@ foreach test_name : test_sources
     test_exe = executable(
         test_name.split('.')[0],
         test_name,
-        include_directories: [include_dirs],
-        dependencies: [],
-        link_with: async_lib
+        include_directories: include_dirs,
+        link_with: async_lib,
+        win_subsystem: 'console'
     )
     test(test_name.split('.')[0], test_exe)
 endforeach 

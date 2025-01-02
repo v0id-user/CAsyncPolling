@@ -5,7 +5,7 @@
 #ifndef POLL_H
 #define POLL_H
 
-#include "func.h"
+#include "async_func.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -13,7 +13,7 @@
 
 struct poll_ctx
 {
-    func_t *functions;
+    async_func_t *functions;
     int32_t size;
     int32_t capacity;
     int32_t index;
@@ -23,7 +23,7 @@ struct poll_ctx
 struct poll
 {
     struct poll_ctx *ctx;
-    void (*chain)(struct poll_ctx *, function, void *);
+    void (*chain)(struct poll_ctx *, async_func_t *, void *);
     void (*wait)(struct poll *);
 };
 
