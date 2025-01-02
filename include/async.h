@@ -16,11 +16,19 @@
 
 typedef struct async_state async_state;
 
-struct async
-{
+
+struct async_ctx{
     poll_t *poll;
     async_state *state;
+};
+
+typedef struct async_ctx async_ctx;
+
+struct async
+{
+    async_ctx *ctx;
     void (*async_wait)(struct async *);
+    void (*async_yield)(struct async *);
 };
 
 typedef struct async async;

@@ -13,9 +13,9 @@ struct async_state
 
 void async_wait(async *self)
 {
-    if (self != NULL && self->poll != NULL)
-    {
-        self->poll->wait(self->poll);
+    if (self != NULL && self->ctx->poll != NULL)
+    {   
+        self->ctx->poll->wait(self->ctx->poll);
     }
 }
 
@@ -32,13 +32,20 @@ async *async_init()
     }
 
     // Initialize all pointers to NULL first
-    self->poll       = NULL;
-    self->state      = NULL;
+    self->ctx = NULL;
     self->async_wait = NULL;
+    self->async_yield = NULL;
 
     // Allocate and initialize the state
-    self->state = (async_state *)malloc(sizeof(async_state));
-    if (self->state == NULL)
+    self->ctx = (async_ctx *)malloc(sizeof(async_ctx));
+    if (self->ctx == NULL)
+    {
+        async_free(self);
+        HANDLE_ERROR("Failed to allocate memory for async_state");
+        return NULL;
+    }
+    self->ctx->state = (async_state *)malloc(sizeof(async_state));
+    if (self->ctx->state == NULL)
     {
         async_free(self);
         HANDLE_ERROR("Failed to allocate memory for async_state");
@@ -46,14 +53,14 @@ async *async_init()
     }
 
     // Initialize state members
-    self->state->is_running  = false;
-    self->state->main_thread = NULL;
+    self->ctx->state->is_running  = false;
+    self->ctx->state->main_thread = NULL;
 
 // Initialize the context/fiber
 #ifdef _WIN32
     DEBUG_PRINT("Converting thread to fiber");
-    self->state->main_thread = ConvertThreadToFiber(NULL);
-    if (self->state->main_thread == NULL)
+    self->ctx->main_thread = ConvertThreadToFiber(NULL);
+    if (self->ctx->main_thread == NULL)
     {
         async_free(self);
         HANDLE_ERROR("Failed to convert thread to fiber");
@@ -61,8 +68,8 @@ async *async_init()
     }
 #else
     DEBUG_PRINT("Allocating memory for main_thread");
-    self->state->main_thread = malloc(sizeof(ucontext_t));
-    if (self->state->main_thread == NULL)
+    self->ctx->state->main_thread = malloc(sizeof(ucontext_t));
+    if (self->ctx->state->main_thread == NULL)
     {
         async_free(self);
         HANDLE_ERROR("Failed to allocate memory for main_thread");
@@ -70,7 +77,7 @@ async *async_init()
     }
 
     DEBUG_PRINT("Getting context");
-    if (getcontext(self->state->main_thread) != 0)
+    if (getcontext(self->ctx->state->main_thread) != 0)
     {
         async_free(self);
         HANDLE_ERROR("Failed to get context");
@@ -79,8 +86,8 @@ async *async_init()
 #endif
 
     // Initialize the poll last
-    self->poll = poll_new();
-    if (self->poll == NULL)
+    self->ctx->poll = poll_new();
+    if (self->ctx->poll == NULL)
     {
         async_free(self);
         HANDLE_ERROR("Failed to create poll");
@@ -99,22 +106,26 @@ void async_free(async *self)
     DEBUG_PRINT("Freeing async");
     if (self != NULL)
     {
-        if (self->poll != NULL)
+        if (self->ctx->poll != NULL)
         {
-            poll_free(self->poll);
-            self->poll = NULL;
+            poll_free(self->ctx->poll);
+            self->ctx->poll = NULL;
         }
-        if (self->state != NULL)
+        if (self->ctx != NULL)
         {
-            if (self->state->main_thread != NULL)
+            if (self->ctx->state->main_thread != NULL)
             {
                 DEBUG_PRINT("Freeing main_thread");
-                free(self->state->main_thread);
-                self->state->main_thread = NULL;
+                free(self->ctx->state->main_thread);
+                self->ctx->state->main_thread = NULL;
             }
             DEBUG_PRINT("Freeing state");
-            free(self->state);
-            self->state = NULL;
+            free(self->ctx->state);
+            self->ctx->state = NULL;
+
+            DEBUG_PRINT("Freeing ctx");
+            free(self->ctx);
+            self->ctx = NULL;
         }
         DEBUG_PRINT("Freeing async");
         free(self);

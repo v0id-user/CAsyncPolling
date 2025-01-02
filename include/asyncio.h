@@ -8,4 +8,13 @@ maintaining the responsiveness of the application.
 #ifndef ASYNCIO_H
 #define ASYNCIO_H
 
+#include "async.h"
+
+
+async* async_sleep(async* self, int ms);
+async* async_read(async* self, int fd);
+async* async_write(async* self, int fd);
+
+
+
 #endif

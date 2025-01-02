@@ -2,7 +2,7 @@
 #include "pprint.h"
 
 void test_async_lib() {
-    pprint("Hello, world!");
+    DEBUG_PRINT("Hello, world!");
 }
 
 int main() {
