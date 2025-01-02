@@ -18,13 +18,16 @@ In [Thoughts.md](THOUGHTS.md), I came across a blog post that discusses exactly 
 On Windows, there’s an API for this called `Fiber`, while on Unix, the equivalent is `ucontext`. However, the issue with Unix is that `ucontext` is not a standard POSIX API, so I’ll need to find a workaround for it.  
 
 ## 3. End result
-I will understand much better how async works in a simple way under the hood, and the code that I will write will look like:
-```c
-poll_t poller = poll_new();
-poller->chain(func1, args1);
-poller->chain(func2, args2);
-poller->chain(func3, args3);
-poller->wait();
-```
+~~I will understand much better how async works in a simple way under the hood, and the code that I will write will look like:~~
 
-Something simple like this will immidiatly fire the functions and round robin them. and you can wait for it to finish and get results.
+~~poll_t poller = poll_new();~~ \
+~~poller->chain(func1, args1);~~ \
+~~poller->chain(func2, args2);~~ \
+~~poller->chain(func3, args3);~~ \
+~~poller->wait();~~ 
+
+
+~~Something simple like this will immidiatly fire the functions and round robin them. and you can wait for it to finish and get results.~~
+
+
+I changed the plan, I the end result is yet to be determined as I code.
