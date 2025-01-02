@@ -7,27 +7,28 @@
 #include "poll.h"
 
 #ifdef _WIN32
-    #include <windows.h>
+#include <windows.h>
 #else
 #define _XOPEN_SOURCE
-    #include <sys/ucontext.h>
-    #include <ucontext.h> // This is a deprecated POSIX, but it's the only way to get the context on macOS that I can find
+#include <sys/ucontext.h>
+#include <ucontext.h>  // This is a deprecated POSIX, but it's the only way to get the context on macOS that I can find
 #endif
 
-typedef struct async_state async_state; 
+typedef struct async_state async_state;
 
-struct async {
-    poll_t* poll;
-    async_state* state;
-    void (*async_wait)(struct async*);
+struct async
+{
+    poll_t *poll;
+    async_state *state;
+    void (*async_wait)(struct async *);
 };
 
 typedef struct async async;
 
 // Function declarations
-async* async_init();
-void async_wait(async* self);
-async* await(async* self, function f);
-void async_free(async* self);
+async *async_init();
+void async_wait(async *self);
+async *await(async *self, function f);
+void async_free(async *self);
 
 #endif

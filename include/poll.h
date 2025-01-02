@@ -1,5 +1,5 @@
 /*
- The poll is responsible for containing the functions that are 
+ The poll is responsible for containing the functions that are
  to be executed and chaining them together.
 */
 #ifndef POLL_H
@@ -10,24 +10,24 @@
 
 #define DEFAULT_POLL_CAPACITY 10
 
-    
-struct poll_ctx{
-    func_t* functions;
+struct poll_ctx
+{
+    func_t *functions;
     int32_t size;
     int32_t capacity;
     int32_t index;
 };
 
-struct poll{
-    struct poll_ctx* ctx;
-    void (*chain)(struct poll*,function);
-    void (*wait)(struct poll*);
+struct poll
+{
+    struct poll_ctx *ctx;
+    void (*chain)(struct poll *, function);
+    void (*wait)(struct poll *);
 };
-
 
 typedef struct poll poll_t;
 
-poll_t* poll_new();
-void poll_free(poll_t* poll);
+poll_t *poll_new();
+void poll_free(poll_t *poll);
 
 #endif

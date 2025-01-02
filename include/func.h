@@ -9,14 +9,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef void (*function)(void*);
+typedef void (*function)(void *);
 
-struct func{
+struct func
+{
     CONTEXT_POINTER self;
     int32_t id;
 
     function f;
-    void* arg;
+    void *arg;
     bool is_completed;
 };
 
