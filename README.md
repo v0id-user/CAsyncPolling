@@ -47,8 +47,35 @@ meson setup builddir
 ninja -C builddir
 ```
 
-#### Windows Cross-Compilation
-Available on macOS and Linux. Requires MinGW-w64 and Wine:
+#### Windows
+Using [MSYS2](https://www.msys2.org/):
+```bash
+# Install MSYS2 from https://www.msys2.org/
+
+# Open MSYS2 UCRT64 and install dependencies
+pacman -Syu
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-meson mingw-w64-ucrt-x86_64-ninja
+
+# Build
+meson setup builddir
+ninja -C builddir
+```
+
+Using Visual Studio (2019 or later):
+```powershell
+# Install dependencies
+winget install Python.Python
+winget install Ninja-build.Ninja
+pip install meson
+
+# Open "Developer Command Prompt for VS" and build
+meson setup builddir
+ninja -C builddir
+```
+
+### Cross-Compilation
+#### Building Windows version on macOS/Linux
+Requires MinGW-w64 and Wine:
 
 ```bash
 # Build for Windows
@@ -66,7 +93,7 @@ WINEPATH="$(pwd)/src" wine64 tests/test_poll.exe
 # Run all tests
 meson test -C builddir
 
-# Run Windows tests (requires Wine)
+# Run Windows cross-compiled tests (requires Wine)
 meson test -C builddir-windows --wrapper wine64
 ```
 
