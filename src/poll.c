@@ -2,9 +2,26 @@
 #include "pprint.h"
 #include <stdlib.h>
 
-static void chain(struct poll *self, function f)
+static struct poll_ctx *expand_poll_ctx(struct poll_ctx *self_ctx)
+{
+    if (self_ctx->size >= self_ctx->capacity)
+    {
+        self_ctx->capacity *= 2;
+        self_ctx->functions = (async_func_t *)realloc(self_ctx->functions, sizeof(async_func_t) * self_ctx->capacity);
+    }
+    else
+    {
+        DEBUG_PRINT("Poll capacity is not full");
+    }
+
+    return self_ctx;
+}
+
+static void chain(struct poll_ctx *self_ctx, async_func_t *f, void *self_async_ctx)
 {
     // TODO: Implement chain functionality
+    DEBUG_PRINT("CHAIN: %p", f);
+    f->f(self_async_ctx, f->arg);
 }
 
 static void poll_wait(struct poll *self)
@@ -28,7 +45,7 @@ poll_t *poll_new()
         HANDLE_ERROR("Failed to allocate memory for poll_ctx");
     }
     DEBUG_PRINT("Allocated memory for poll_ctx");
-    self->ctx->functions = (func_t *)malloc(sizeof(func_t) * DEFAULT_POLL_CAPACITY);
+    self->ctx->functions = (async_func_t *)malloc(sizeof(async_func_t) * DEFAULT_POLL_CAPACITY);
     if (self->ctx->functions == NULL)
     {
         free(self->ctx);
@@ -47,16 +64,22 @@ poll_t *poll_new()
 
 void poll_free(poll_t *poll)
 {
-    if (poll != NULL)
+    if (poll == NULL)
     {
-        if (poll->ctx != NULL)
-        {
-            if (poll->ctx->functions != NULL)
-            {
-                free(poll->ctx->functions);
-            }
-            free(poll->ctx);
-        }
-        free(poll);
+        return;
     }
+
+    if (poll->ctx == NULL)
+    {
+        free(poll);
+        return;
+    }
+
+    if (poll->ctx->functions != NULL)
+    {
+        free(poll->ctx->functions);
+    }
+
+    free(poll->ctx);
+    free(poll);
 }

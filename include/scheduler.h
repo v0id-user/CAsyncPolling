@@ -6,14 +6,12 @@
 
 #include <stdbool.h>
 #include <time.h>
-#include "poll.h"
 
 #define SCHEDULER_TICK_MS 25
 
 struct schedular
 {
     time_t last_tick;
-    poll_t *poll;
 };
 
 typedef struct schedular schedular_t;

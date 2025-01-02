@@ -19,7 +19,7 @@ typedef void (*fiber_func)(void *);
 #endif
 
 #ifdef _WIN32
-#define CONTEXT_POINTER void *
+#define CONTEXT_POINTER LPVOID
 #else
 #define CONTEXT_POINTER ucontext_t *
 #endif
