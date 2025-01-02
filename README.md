@@ -1,6 +1,6 @@
 # CPoll
 
-A simple asynchronous polling system for C. This is an experimental project to explore C programming capabilities.
+A simple asynchronous polling system for C. This is an experimental project to explore my C programming capabilities.
 
 ## Setup Instructions
 
