@@ -2,6 +2,7 @@ test_sources = [
     'test_poll.c',
     'test_async.c',
     'test_ucontext.c',
+    'test_async_lib.c',
 ]
 
 foreach test_name : test_sources
