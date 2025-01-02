@@ -8,22 +8,26 @@
 #include <string.h>
 
 #ifdef _WIN32
-    #include <windows.h>
-    #define sleep(seconds) Sleep((seconds) * 1000)
-    typedef void (*fiber_func)(void*);
+#include <windows.h>
+#define sleep(seconds) Sleep((seconds) * 1000)
+typedef void (*fiber_func)(void *);
 #else
-    #include <unistd.h>
-    #include <sys/ucontext.h>
-    #include <errno.h>
-    #define WINAPI
+#include <errno.h>
+#include <sys/ucontext.h>
+#include <unistd.h>
+#define WINAPI
 #endif
 
 #ifdef _WIN32
-    #define CONTEXT_POINTER void*
+#define CONTEXT_POINTER void *
 #else
-    #define CONTEXT_POINTER ucontext_t*
+#define CONTEXT_POINTER ucontext_t *
 #endif
 
-#define BLOCK(x) do { x; } while(0)
+#define BLOCK(x)                                                                                   \
+    do                                                                                             \
+    {                                                                                              \
+        x;                                                                                         \
+    } while (0)
 
-#endif // UTILS_H
+#endif  // UTILS_H

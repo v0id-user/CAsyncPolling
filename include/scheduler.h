@@ -6,7 +6,8 @@
 
 #include <stdbool.h>
 
-struct schedular{
+struct schedular
+{
 
     bool is_running;
 };

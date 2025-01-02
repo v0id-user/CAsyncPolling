@@ -1,0 +1,30 @@
+{
+  "name": "cpoll",
+  "version": "1.0.0",
+  "description": "CPoll is a simple asynchronous polling system for C. It is designed to be easy to use, understand and as an experiment to see how much I can do in C.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "./scripts/lint.sh",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v0id-user/cpoll.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/v0id-user/cpoll/issues"
+  },
+  "homepage": "https://github.com/v0id-user/cpoll#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.3",
+    "@commitlint/config-conventional": "^19.0.3",
+    "husky": "^9.0.11"
+  }
+}
