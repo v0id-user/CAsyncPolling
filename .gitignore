@@ -165,3 +165,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+builddir-windows
+builddir-linux
+builddir-macos

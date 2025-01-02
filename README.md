@@ -1,130 +1,76 @@
 # CPoll
 
-CPoll is a simple asynchronous polling system for C. It is designed to be easy to use, understand and as an experiment to see how much I can do in C.
+A simple asynchronous polling system for C. This is an experimental project to explore C programming capabilities.
 
-## Prerequisites
+## Setup Instructions
 
-- A C compiler (gcc, clang)
-- [Meson](https://mesonbuild.com/) build system
-- For development:
-  - [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for code formatting
-  - [cppcheck](http://cppcheck.sourceforge.net/) for static analysis
-  - [Node.js](https://nodejs.org/) for development tools
-
-### Installing Development Dependencies
+### Automatic Setup
 
 #### macOS
 ```bash
-# Install required tools
-brew install llvm cppcheck node
-
-# Add LLVM tools to your PATH (add this to your ~/.zshrc or ~/.bash_profile)
-export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-```
-
-#### Ubuntu/Debian
-```bash
-sudo apt-get install clang-format cppcheck nodejs npm
-```
-
-#### Windows
-```bash
-# Using chocolatey
-choco install llvm cppcheck nodejs
-
-# Or using winget
-winget install LLVM.LLVM
-winget install cppcheck.cppcheck
-winget install OpenJS.NodeJS
-
-# Make sure to add LLVM to your PATH if not done automatically
-```
-
-## Building
-
-1. Clone the repository:
-```bash
-git clone https://github.com/v0id-user/cpoll.git
-cd cpoll
-```
-
-2. Setup the build directory:
-```bash
+./scripts/setup_macos.sh  # Installs all dependencies
 meson setup builddir
+ninja -C builddir
 ```
 
-3. Compile the project:
+#### Linux (Ubuntu/Debian)
 ```bash
-cd builddir
-meson compile
+./scripts/setup_linux.sh  # Installs all dependencies
+meson setup builddir
+ninja -C builddir
 ```
 
-## Development
+### Manual Setup
 
-### Code Style and Linting
-
-The project uses:
-- clang-format for code formatting
-- cppcheck for static analysis
-- husky for git hooks
-- commitlint for commit message conventions
-
-After cloning the repository, install the development dependencies:
+#### macOS
 ```bash
-npm install
+# Install dependencies
+brew install llvm cppcheck node mingw-w64 wine-stable meson ninja
+
+# Add LLVM to PATH (add to ~/.zshrc)
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+
+# Build
+meson setup builddir
+ninja -C builddir
 ```
 
-This will set up husky git hooks that automatically run linting before each commit.
-
-To manually run linting:
+#### Linux (Ubuntu/Debian)
 ```bash
-npm run lint
+# Install dependencies
+sudo apt-get update
+sudo apt-get install -y clang clang-format cppcheck nodejs npm python3-pip ninja-build
+pip3 install --user meson
+
+# Build
+meson setup builddir
+ninja -C builddir
 ```
 
-### Commit Message Convention
+#### Windows Cross-Compilation
+Available on macOS and Linux. Requires MinGW-w64 and Wine:
 
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Each commit message should be structured as follows:
+```bash
+# Build for Windows
+meson setup builddir-windows --cross-file windows.ini
+ninja -C builddir-windows
 
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-Types:
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation only changes
-- `style`: Changes that do not affect the meaning of the code
-- `refactor`: A code change that neither fixes a bug nor adds a feature
-- `perf`: A code change that improves performance
-- `test`: Adding missing tests or correcting existing tests
-- `build`: Changes that affect the build system or external dependencies
-- `ci`: Changes to our CI configuration files and scripts
-- `chore`: Other changes that don't modify src or test files
-
-Examples:
-```
-feat: add new polling mechanism
-fix(memory): resolve memory leak in async handler
-chore: update development dependencies
+# Run tests (requires Wine)
+cd builddir-windows
+WINEPATH="$(pwd)/src" wine64 tests/test_poll.exe
 ```
 
 ## Running Tests
 
-From the build directory:
 ```bash
-meson test
+# Run all tests
+meson test -C builddir
+
+# Run Windows tests (requires Wine)
+meson test -C builddir-windows --wrapper wine64
 ```
 
-Or from the project root:
-```bash
-cd builddir && meson test
-```
+## Status
 
-## Development Status
-
-Still in development - not ready for any use.
+Experimental project - not ready for production use.
 

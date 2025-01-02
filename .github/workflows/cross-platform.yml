@@ -1,0 +1,58 @@
+name: Cross-Platform Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 wine64
+
+    - name: Install Dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install mingw-w64
+        brew install --cask wine-stable
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install Meson and Ninja
+      run: |
+        python -m pip install --upgrade pip
+        pip install meson ninja
+
+    - name: Configure and Build (Native)
+      run: |
+        meson setup builddir
+        ninja -C builddir
+
+    - name: Configure and Build (Windows Cross-Compilation)
+      run: |
+        meson setup --reconfigure builddir-windows --cross-file windows.ini
+        ninja -C builddir-windows
+
+    - name: Run Tests (Native)
+      run: |
+        meson test -C builddir --print-errorlogs
+
+    - name: Run Tests (Windows)
+      run: |
+        meson test -C builddir-windows --print-errorlogs 

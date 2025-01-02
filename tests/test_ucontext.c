@@ -5,6 +5,13 @@
 
 #include <stdio.h>
 
+#ifdef _WIN32
+int main(void) {
+    printf("ucontext tests are skipped on Windows\n");
+    return 77; // Meson's skip test status
+}
+#else
+
 #define _XOPEN_SOURCE
 #include <sys/ucontext.h>
 #include <ucontext.h>
@@ -45,3 +52,4 @@ int main(void)
     swapcontext(&ctx[0], &ctx[2]);
     return 0;
 }
+#endif
