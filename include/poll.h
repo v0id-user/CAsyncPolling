@@ -7,6 +7,7 @@
 
 #include "func.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 #define DEFAULT_POLL_CAPACITY 10
 
@@ -16,6 +17,7 @@ struct poll_ctx
     int32_t size;
     int32_t capacity;
     int32_t index;
+    bool is_running;
 };
 
 struct poll

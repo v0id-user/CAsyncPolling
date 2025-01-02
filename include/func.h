@@ -18,7 +18,6 @@ struct func
 
     function f;
     void *arg;
-    bool is_completed;
 };
 
 typedef struct func func_t;
