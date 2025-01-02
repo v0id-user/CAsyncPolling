@@ -2,9 +2,25 @@
 #include "pprint.h"
 #include <stdlib.h>
 
-static void chain(struct poll *self, function f)
+static struct poll_ctx *expand_poll_ctx(struct poll_ctx *self_ctx)
+{
+    if (self_ctx->size >= self_ctx->capacity)
+    {
+        self_ctx->capacity *= 2;
+        self_ctx->functions = (func_t *)realloc(self_ctx->functions, sizeof(func_t) * self_ctx->capacity);
+    }
+    else
+    {
+        DEBUG_PRINT("Poll capacity is not full");
+    }
+
+    return self_ctx;
+}
+
+static void chain(struct poll_ctx *self_ctx, function f, void *arg)
 {
     // TODO: Implement chain functionality
+    DEBUG_PRINT("CHAIN: %p", f);
 }
 
 static void poll_wait(struct poll *self)

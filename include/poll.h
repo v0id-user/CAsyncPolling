@@ -23,7 +23,7 @@ struct poll_ctx
 struct poll
 {
     struct poll_ctx *ctx;
-    void (*chain)(struct poll *, function);
+    void (*chain)(struct poll_ctx *, function, void *);
     void (*wait)(struct poll *);
 };
 

@@ -27,7 +27,7 @@ typedef struct async_ctx async_ctx;
 struct async
 {
     async_ctx *ctx;
-    void (*async_wait)(struct async *);
+    void (*async_run)(struct async_ctx *, function, void *);
     void (*async_yield)(struct async *);
 };
 
@@ -35,7 +35,6 @@ typedef struct async async;
 
 // Function declarations
 async *async_init();
-void async_wait(async *self);
 async *await(async *self, function f);
 void async_free(async *self);
 

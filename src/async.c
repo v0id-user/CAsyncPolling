@@ -1,22 +1,31 @@
 #include "async.h"
 #include "poll.h"
 #include "pprint.h"
+#include "scheduler.h"
 
 #include <stdbool.h>
-
+#include <stdint.h>
 // Internal state of the functions
 struct async_state
 {
+    schedular_t *schedular;
+    int32_t current_function_index;
     CONTEXT_POINTER main_thread;
     bool is_running;
 };
 
-void async_wait(async *self)
-{
-    if (self != NULL && self->ctx->poll != NULL)
-    {   
-        self->ctx->poll->wait(self->ctx->poll);
+static void async_run(async_ctx *self_ctx, function f, void *arg){
+    // Chain in the poll
+
+    if (self_ctx->poll == NULL)
+    {
+        HANDLE_ERROR("ASYNC_RUN: Poll is NULL");
     }
+
+    poll_t *poll = self_ctx->poll;
+
+    poll->chain(poll->ctx, f, arg);
+
 }
 
 async *async_init()
@@ -33,7 +42,7 @@ async *async_init()
 
     // Initialize all pointers to NULL first
     self->ctx = NULL;
-    self->async_wait = NULL;
+    self->async_run = NULL;
     self->async_yield = NULL;
 
     // Allocate and initialize the state
@@ -51,6 +60,8 @@ async *async_init()
         HANDLE_ERROR("Failed to allocate memory for async_state");
         return NULL;
     }
+
+    self->ctx->state->schedular = schedular_new();
 
     // Initialize state members
     self->ctx->state->is_running  = false;
@@ -95,11 +106,13 @@ async *async_init()
     }
 
     // Set function pointers last
-    self->async_wait = async_wait;
+    self->async_run = async_run;
 
     DEBUG_PRINT("Async initialization complete");
     return self;
 }
+
+
 
 void async_free(async *self)
 {
