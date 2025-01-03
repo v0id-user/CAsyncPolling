@@ -11,13 +11,14 @@
 
 struct schedular
 {
-    time_t last_tick;
+    time_t tick;
+    bool (*did_time_pass)(void *);
 };
 
 typedef struct schedular schedular_t;
 
 schedular_t *schedular_new();
-void schedule(schedular_t *schedular);
+schedular_t *schedule(schedular_t *self);
 void schedular_free(schedular_t *schedular);
 
 #endif

@@ -1,9 +1,22 @@
+#include "pprint.h"
 #include "async.h"
 #include <assert.h>
 #include <stdio.h>
 
-void test_function(void *ctx, void *arg){
-    printf("TEST FUNCTION: %s\n", (char *)arg);
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+void test_function(async_state *state, void *arg){
+    DEBUG_PRINT("TEST FUNCTION: %s\n", (char *)arg);
+    DEBUG_PRINT("STATE PTR: %p\n", (void *)state);
+    for (int i = 0; i < 10; i++) {
+        // Mimic a long running function
+        Sleep(10); // Sleep for 10 ms because the scheduler is 25ms
+        async_yield(state);
+    }
 }
 
 static void test_async_create()
@@ -24,7 +37,14 @@ static void test_async_create()
     assert(asyn->async_run != NULL);
 
     // Create async_func_t structure
-    async_func_t async_func = {
+    async_func_t async_test_function1 = {
+        .self = NULL,  // Will be set by the async system
+        .id = 0,       // Will be set by the async system
+        .f = test_function,
+        .arg = "Hello, World!"
+    };
+
+    async_func_t async_test_function2 = {
         .self = NULL,  // Will be set by the async system
         .id = 0,       // Will be set by the async system
         .f = test_function,
@@ -32,7 +52,9 @@ static void test_async_create()
     };
 
 
-    asyn->async_run(asyn->ctx, &async_func);
+    // Run same function twice to test if it can be run again
+    asyn->async_run(asyn->ctx, &async_test_function1);
+    asyn->async_run(asyn->ctx, &async_test_function2);
 
     // Cleanup
     async_free(asyn);

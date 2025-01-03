@@ -13,15 +13,25 @@ static struct poll_ctx *expand_poll_ctx(struct poll_ctx *self_ctx)
     {
         DEBUG_PRINT("Poll capacity is not full");
     }
+    DEBUG_PRINT("Poll capacity: %d\n", self_ctx->capacity);
+    DEBUG_PRINT("Poll size: %d\n", self_ctx->size);
+    return self_ctx;
+}
 
+static struct poll_ctx *add_poll_ctx(struct poll_ctx *self_ctx, async_func_t *f, void *self_async_ctx)
+{
+    self_ctx = expand_poll_ctx(self_ctx);
+    self_ctx->functions[self_ctx->index] = f;
+    self_ctx->size += sizeof(*f);
+    self_ctx->index++;
     return self_ctx;
 }
 
 static void chain(struct poll_ctx *self_ctx, async_func_t *f, void *self_async_ctx)
 {
-    // TODO: Implement chain functionality
+    // TODO: Complete chain functionality
     DEBUG_PRINT("CHAIN: %p", f);
-    f->f(self_async_ctx, f->arg);
+    self_ctx = add_poll_ctx(self_ctx, f, self_async_ctx);
 }
 
 static void poll_wait(struct poll *self)
@@ -45,7 +55,7 @@ poll_t *poll_new()
         HANDLE_ERROR("Failed to allocate memory for poll_ctx");
     }
     DEBUG_PRINT("Allocated memory for poll_ctx");
-    self->ctx->functions = (async_func_t *)malloc(sizeof(async_func_t) * DEFAULT_POLL_CAPACITY);
+    self->ctx->functions = (async_func_t *)malloc(DEFAULT_POLL_CAPACITY);
     if (self->ctx->functions == NULL)
     {
         free(self->ctx);

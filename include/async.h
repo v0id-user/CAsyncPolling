@@ -14,8 +14,8 @@
 #include <ucontext.h>  // This is a deprecated POSIX, but it's the only way to get the context on macOS that I can find
 #endif
 
+// Forward declaration
 typedef struct async_state async_state;
-
 
 struct async_ctx{
     poll_t *poll;
@@ -28,13 +28,13 @@ struct async
 {
     async_ctx *ctx;
     void (*async_run)(struct async_ctx *, async_func_t *);
-    void (*async_yield)(struct async *);
 };
 
 typedef struct async async;
 
 // Function declarations
 async *async_init();
+void async_yield(async_state *self_state);
 void async_free(async *self);
 
 #endif

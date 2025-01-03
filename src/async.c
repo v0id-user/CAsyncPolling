@@ -4,18 +4,45 @@
 #include "scheduler.h"
 #include "async_func.h" 
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
+
 // Internal state of the functions
 struct async_state
 {
     schedular_t *schedular;
     int32_t current_function_index;
+    CONTEXT_POINTER async_addr;
     CONTEXT_POINTER main_thread;
+#ifndef _WIN32
+    char stack[60*1024]; // 60kb stack required for ucontext.h
+#endif
     bool is_running;
+    async_ctx *self_ctx;
+    async_func_t *self_func;
 };
 
-static void async_run(async_ctx *self_ctx, async_func_t *f){
+static void async_start(async_state *self_state)
+{
+    self_state->schedular = schedule(self_state->schedular);
+    self_state->is_running = true;
+    self_state->self_func->f(self_state->self_ctx, self_state->self_func->arg);
+}
+
+static void async_run_internal(async_state *self_state)
+{
+
+    // We run the function and assume, it will yeild as normal async programs do
+    #ifdef _WIN32
+    self_state->async_addr = CreateFiber(0, async_start, self_state);
+    #else
+    #endif
+}
+
+static void async_run(async_ctx *self_ctx, async_func_t *f)
+{
     // Chain in the poll
     if (self_ctx->poll == NULL)
     {
@@ -24,6 +51,14 @@ static void async_run(async_ctx *self_ctx, async_func_t *f){
 
     poll_t *poll = self_ctx->poll;
     poll->chain(poll->ctx, f, self_ctx);
+
+    self_ctx->state->current_function_index++;
+    // Create new state object for the function
+    async_state *self_state = malloc(sizeof(async_state));
+    memcpy(self_state, self_ctx->state, sizeof(async_state));
+    self_state->self_func = f;
+    self_state->self_ctx = self_ctx;
+    async_run_internal(self_state);
 }
 
 async *async_init()
@@ -41,7 +76,6 @@ async *async_init()
     // Initialize all pointers to NULL first
     self->ctx = NULL;
     self->async_run = NULL;
-    self->async_yield = NULL;
 
     // Allocate and initialize the state
     self->ctx = (async_ctx *)malloc(sizeof(async_ctx));
@@ -121,6 +155,29 @@ async *async_init()
 
     DEBUG_PRINT("Async initialization complete");
     return self;
+}
+
+void async_yield(async_state *self_state){
+    DEBUG_PRINT("Yielding");
+    DEBUG_PRINT("Current function index: %d\n", self_state->current_function_index);
+    DEBUG_PRINT("Is running: %d\n", self_state->is_running);
+    DEBUG_PRINT("Current function: %p\n", self_state->self_func);
+    DEBUG_PRINT("Current schedular: %p\n", self_state->schedular);
+    DEBUG_PRINT("Current schedular tick: %d\n", self_state->schedular->tick);
+
+    // Check if the time has passed
+    if (!self_state->schedular->did_time_pass(self_state->schedular))
+    {
+        return;
+    }
+    
+    DEBUG_PRINT("Tick has passed, we can change execution context");
+
+    // Change execution context
+    
+    // Reset the tick
+    self_state->schedular = schedule(self_state->schedular);
+
 }
 
 void async_free(async *self)

@@ -9,11 +9,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DEFAULT_POLL_CAPACITY 10
+#define DEFAULT_POLL_CAPACITY sizeof(async_func_t) * 10
 
 struct poll_ctx
 {
-    async_func_t *functions;
+    async_func_t **functions;
     int32_t size;
     int32_t capacity;
     int32_t index;
