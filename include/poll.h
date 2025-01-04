@@ -5,26 +5,31 @@
 #ifndef POLL_H
 #define POLL_H
 
+
 #include "async_func.h"
+#include "utils.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DEFAULT_POLL_CAPACITY sizeof(async_func_t) * 10
+#define DEFAULT_POLL_CAPACITY sizeof(void*) * 10
 
 struct poll_ctx
 {
-    async_func_t **functions;
+    // function contexts (for windows it's fiber in unix it's ucontext)
+    void* *contexts;
     int32_t size;
     int32_t capacity;
     int32_t index;
+    int32_t count;
     bool is_running;
 };
 
 struct poll
 {
     struct poll_ctx *ctx;
-    void (*chain)(struct poll_ctx *, async_func_t *, void *);
-    void (*wait)(struct poll *);
+    void (*chain)(struct poll_ctx *, void* );
+    void* (*next_context)(struct poll_ctx *);
 };
 
 typedef struct poll poll_t;

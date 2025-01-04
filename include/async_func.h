@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef void (*async_function)(void *, void *);
+typedef void (*async_function)(void *,void *, void *);
 
 struct async_func
 {

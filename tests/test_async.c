@@ -9,13 +9,14 @@
 #include <unistd.h>
 #endif
 
-void test_function(async_state *state, void *arg){
-    DEBUG_PRINT("TEST FUNCTION: %s\n", (char *)arg);
+void test_function(async_ctx *ctx, async_state *state, char *arg){
     DEBUG_PRINT("STATE PTR: %p\n", (void *)state);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
         // Mimic a long running function
-        Sleep(10); // Sleep for 10 ms because the scheduler is 25ms
-        async_yield(state);
+        DEBUG_PRINT("TEST FUNCTION: %p\n", arg);
+        Sleep(35); // Sleep for 35ms to simulate a long running function (35ms is 35000000ns, yes this is long), the scheduler is 25ms
+        // TODO: Check if calling on each loop introduces an overhead
+        async_yield(ctx, state);
     }
 }
 
@@ -37,24 +38,31 @@ static void test_async_create()
     assert(asyn->async_run != NULL);
 
     // Create async_func_t structure
+    char *arg1 = "Hello, World1!";
+    char *arg2 = "Hello, World2!";
+    DEBUG_PRINT("ARG1: %p", arg1);
+    DEBUG_PRINT("ARG2: %p", arg2);
     async_func_t async_test_function1 = {
         .self = NULL,  // Will be set by the async system
         .id = 0,       // Will be set by the async system
         .f = test_function,
-        .arg = "Hello, World!"
+        .arg = arg1
     };
 
     async_func_t async_test_function2 = {
         .self = NULL,  // Will be set by the async system
         .id = 0,       // Will be set by the async system
         .f = test_function,
-        .arg = "Hello, World!"
+        .arg = arg2
     };
 
 
     // Run same function twice to test if it can be run again
     asyn->async_run(asyn->ctx, &async_test_function1);
     asyn->async_run(asyn->ctx, &async_test_function2);
+
+    // Wait for the functions to finish
+    asyn->await(asyn->ctx);
 
     // Cleanup
     async_free(asyn);

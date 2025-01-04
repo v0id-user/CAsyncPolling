@@ -4,39 +4,56 @@
 
 static struct poll_ctx *expand_poll_ctx(struct poll_ctx *self_ctx)
 {
-    if (self_ctx->size >= self_ctx->capacity)
+    DEBUG_PRINT("Expanding poll context");
+    if (self_ctx->count >= (self_ctx->capacity / sizeof(void*)))
     {
+        DEBUG_PRINT("Poll capacity is full");
         self_ctx->capacity *= 2;
-        self_ctx->functions = (async_func_t *)realloc(self_ctx->functions, sizeof(async_func_t) * self_ctx->capacity);
+        self_ctx->contexts = (void**)realloc(self_ctx->contexts, self_ctx->capacity);
+        if (self_ctx->contexts == NULL) {
+            HANDLE_ERROR("Failed to reallocate memory for poll contexts");
+        }
+        DEBUG_PRINT("Poll capacity: %d", self_ctx->capacity);
     }
-    else
-    {
-        DEBUG_PRINT("Poll capacity is not full");
-    }
-    DEBUG_PRINT("Poll capacity: %d\n", self_ctx->capacity);
-    DEBUG_PRINT("Poll size: %d\n", self_ctx->size);
     return self_ctx;
 }
 
-static struct poll_ctx *add_poll_ctx(struct poll_ctx *self_ctx, async_func_t *f, void *self_async_ctx)
+static struct poll_ctx *add_poll_ctx(struct poll_ctx *self_ctx, void* context)
 {
+    DEBUG_PRINT("Adding poll context");
     self_ctx = expand_poll_ctx(self_ctx);
-    self_ctx->functions[self_ctx->index] = f;
-    self_ctx->size += sizeof(*f);
-    self_ctx->index++;
+    DEBUG_PRINT("Poll context added %p", context);
+    self_ctx->contexts[self_ctx->count] = context;
+    DEBUG_PRINT("Poll context added at index %d", self_ctx->count);
+    self_ctx->size = (self_ctx->count + 1) * sizeof(void*);
+    DEBUG_PRINT("Poll size: %d", self_ctx->size);
+    self_ctx->count++;
+    DEBUG_PRINT("Poll count: %d", self_ctx->count);
     return self_ctx;
 }
 
-static void chain(struct poll_ctx *self_ctx, async_func_t *f, void *self_async_ctx)
+static void* get_next_poll_ctx(struct poll_ctx *self_ctx)
 {
-    // TODO: Complete chain functionality
-    DEBUG_PRINT("CHAIN: %p", f);
-    self_ctx = add_poll_ctx(self_ctx, f, self_async_ctx);
+    DEBUG_PRINT("Getting next poll context");
+    DEBUG_PRINT("Poll index: %d", self_ctx->index);
+    DEBUG_PRINT("Poll count: %d", self_ctx->count);
+    if (self_ctx->index >= self_ctx->count)
+    {
+        // Just reset the index to 0
+        self_ctx->index = 0;
+        DEBUG_PRINT("Resetting poll index to 0");
+    }
+    DEBUG_PRINT("Incrementing poll index");
+    void* context = self_ctx->contexts[self_ctx->index];
+    self_ctx->index++;
+    
+    DEBUG_PRINT("Returning poll context %p", context);
+    return context;
 }
 
-static void poll_wait(struct poll *self)
+static void chain(struct poll_ctx *self_ctx, void* context)
 {
-    // TODO: Implement wait functionality
+    self_ctx = add_poll_ctx(self_ctx, context);
 }
 
 poll_t *poll_new()
@@ -55,8 +72,8 @@ poll_t *poll_new()
         HANDLE_ERROR("Failed to allocate memory for poll_ctx");
     }
     DEBUG_PRINT("Allocated memory for poll_ctx");
-    self->ctx->functions = (async_func_t *)malloc(DEFAULT_POLL_CAPACITY);
-    if (self->ctx->functions == NULL)
+    self->ctx->contexts = (CONTEXT_POINTER *)malloc(DEFAULT_POLL_CAPACITY);
+    if (self->ctx->contexts == NULL)
     {
         free(self->ctx);
         free(self);
@@ -66,8 +83,9 @@ poll_t *poll_new()
     self->ctx->size     = 0;
     self->ctx->capacity = DEFAULT_POLL_CAPACITY;
     self->ctx->index    = 0;
+    self->ctx->count    = 0;
     self->chain         = chain;
-    self->wait          = poll_wait;
+    self->next_context  = get_next_poll_ctx;
     DEBUG_PRINT("Returning poll %p", self);
     return self;
 }
@@ -85,9 +103,9 @@ void poll_free(poll_t *poll)
         return;
     }
 
-    if (poll->ctx->functions != NULL)
+    if (poll->ctx->contexts != NULL)
     {
-        free(poll->ctx->functions);
+        free(poll->ctx->contexts);
     }
 
     free(poll->ctx);

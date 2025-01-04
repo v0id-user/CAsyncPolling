@@ -11,7 +11,7 @@
 
 struct schedular
 {
-    time_t tick;
+    long long tick;
     bool (*did_time_pass)(void *);
 };
 
