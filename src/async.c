@@ -132,6 +132,13 @@ static void async_await(async_ctx *self_ctx)
                 all_done = true;
                 break;
             }
+
+            /** 
+             * Check if the current async state is still active (not completed). 
+             * If it is, we switch execution to this state, allowing it to continue 
+             * from where it left off. This context switching is managed by the 
+             * operating system's OS context/fiber switch APIs.
+             */
             if (!state->is_done)
             {
                 DEBUG_PRINT("Main event loop: Switching to state %d", state->current_function_index);
@@ -140,7 +147,7 @@ static void async_await(async_ctx *self_ctx)
                 self_ctx->schedular = schedule(self_ctx->schedular);
                 SwitchToFiber(state->async_addr);
                 DEBUG_PRINT("Main event loop: Switched to state %d", state->current_function_index);
-            }else{
+            } else {
                 DEBUG_PRINT("Main event loop: State %d is done", state->current_function_index);
                 number_of_dones++;
             }
