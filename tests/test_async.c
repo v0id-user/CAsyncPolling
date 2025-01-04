@@ -9,6 +9,7 @@
 #include <unistd.h>
 #endif
 
+
 void test_function(async_ctx *ctx, async_state *state, char *arg){
     DEBUG_PRINT("STATE PTR: %p\n", (void *)state);
     for (int i = 0; i < 5; i++) {
@@ -20,6 +21,9 @@ void test_function(async_ctx *ctx, async_state *state, char *arg){
     }
 }
 
+// The expected output is 10 TEST FUNCTION: {address} run it 
+// and press ctrl+f search for TEST FUNCTION: {address}, yes
+// not the most brilliant test, but it's a start ;D
 static void test_async_create()
 {
     printf("Testing async creation...\n");
