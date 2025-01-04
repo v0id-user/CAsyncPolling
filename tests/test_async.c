@@ -22,8 +22,9 @@ void test_function(async_ctx *ctx, async_state *state, char *arg){
 }
 
 // The expected output is 10 TEST FUNCTION: {address} run it 
-// and press ctrl+f search for TEST FUNCTION: {address}, yes
-// not the most brilliant test, but it's a start ;D
+// and press ctrl+f search for "TEST FUNCTION" if you see 10 
+// of them, then the test passed. Not the most brilliant test, 
+// but it's a start ;D
 static void test_async_create()
 {
     printf("Testing async creation...\n");
@@ -62,6 +63,8 @@ static void test_async_create()
 
 
     // Run same function twice to test if it can be run again
+
+    // TODO: Unix support
     asyn->async_run(asyn->ctx, &async_test_function1);
     asyn->async_run(asyn->ctx, &async_test_function2);
 
