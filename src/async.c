@@ -8,6 +8,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef _WIN32
+#include <ucontext.h>
+#endif
+
 // Internal state of the functions
 struct async_state
 {
@@ -62,6 +66,7 @@ static void async_run_internal(async_ctx *self_ctx, async_state *state)
     args->self_ctx = self_ctx;
     args->self_state = state;
     args->arg = state->self_func->arg;
+    DEBUG_PRINT("Async args: %p", args);
 
     #ifdef _WIN32
         DEBUG_PRINT("Creating fiber");
@@ -75,11 +80,49 @@ static void async_run_internal(async_ctx *self_ctx, async_state *state)
                                                 ->ctx
                                                 ->index;
     #else
+        DEBUG_PRINT("Creating context");
+        state->async_addr = malloc(sizeof(ucontext_t));
+        if (state->async_addr == NULL) {
+            HANDLE_ERROR("Failed to allocate memory for async_addr");
+            free(args);
+            return;
+        }
+
+        DEBUG_PRINT("Getting context");
+        // Get the current context as a template
+        if (getcontext(state->async_addr) == -1) {
+            HANDLE_ERROR("Failed to get context");
+            free(state->async_addr);
+            free(args);
+            return;
+        }
+
+        // Setup the new context
+        DEBUG_PRINT("Setting up new context");
+        ((ucontext_t*)state->async_addr)->uc_stack.ss_sp = state->stack;
+        DEBUG_PRINT("Setting up new context %p", state->stack);
+        ((ucontext_t*)state->async_addr)->uc_stack.ss_size = sizeof(state->stack);
+        DEBUG_PRINT("Setting up new context %lu", sizeof(state->stack));
+        ((ucontext_t*)state->async_addr)->uc_stack.ss_flags = 0;
+        DEBUG_PRINT("Setting up new context %p", ((ucontext_t*)state->async_addr)->uc_link);
+        ((ucontext_t*)state->async_addr)->uc_link = NULL;  // No link context, we'll handle switching manually
+
+        // Make the context
+        DEBUG_PRINT("Making context");
+        makecontext((ucontext_t*)state->async_addr, (void (*)())async_start, 1, args);
+        DEBUG_PRINT("Context made");
+
+        // Chain the async_state in the poll
+        DEBUG_PRINT("Chaining async_state in poll");
+        self_ctx->poll->chain(self_ctx->poll->ctx, state);
+        state->current_function_index = self_ctx->poll->ctx->index;
+        DEBUG_PRINT("Current function index: %d", state->current_function_index);
     #endif
 }
 
 static void async_run(async_ctx *self_ctx, async_func_t *f)
 {
+    DEBUG_PRINT("Running async_run %p", f);
     // Chain in the poll
     if (self_ctx->poll == NULL)
     {
@@ -93,8 +136,13 @@ static void async_run(async_ctx *self_ctx, async_func_t *f)
         HANDLE_ERROR("Failed to allocate memory for async_state");
     }
 
-    // Copy the state
-    memcpy(self_state, self_ctx->state, sizeof(async_state));
+    DEBUG_PRINT("Copying state");
+    DEBUG_PRINT("Before copy: %p", self_state);
+    DEBUG_PRINT("Before copy: %p", self_ctx->state);
+    // Copy the state - only copy the async_state structure
+    memcpy(self_state, self_ctx->state, sizeof(struct async_state));
+    DEBUG_PRINT("After copy: %p", self_state);
+    DEBUG_PRINT("After copy: %p", self_ctx->state);
 
     // Set the function and context
     self_state->self_func = f;
@@ -145,7 +193,11 @@ static void async_await(async_ctx *self_ctx)
                 DEBUG_PRINT("Main event loop: Switching to context %p", state->async_addr);
                 all_done = false;
                 self_ctx->schedular = schedule(self_ctx->schedular);
+#ifdef _WIN32
                 SwitchToFiber(state->async_addr);
+#else
+                swapcontext((ucontext_t*)self_ctx->state->main_thread, (ucontext_t*)state->async_addr);
+#endif
                 DEBUG_PRINT("Main event loop: Switched to state %d", state->current_function_index);
             } else {
                 DEBUG_PRINT("Main event loop: State %d is done", state->current_function_index);
@@ -221,20 +273,19 @@ async *async_init()
         return NULL;
     }
 #else
-    DEBUG_PRINT("Allocating memory for main_thread");
+    DEBUG_PRINT("Creating main context");
     self->ctx->state->main_thread = malloc(sizeof(ucontext_t));
     if (self->ctx->state->main_thread == NULL)
     {
         async_free(self);
-        HANDLE_ERROR("Failed to allocate memory for main_thread");
+        HANDLE_ERROR("Failed to allocate memory for main context");
         return NULL;
     }
-
-    DEBUG_PRINT("Getting context");
-    if (getcontext(self->ctx->state->main_thread) != 0)
+    if (getcontext(self->ctx->state->main_thread) == -1)
     {
+        free(self->ctx->state->main_thread);
         async_free(self);
-        HANDLE_ERROR("Failed to get context");
+        HANDLE_ERROR("Failed to get main context");
         return NULL;
     }
 #endif
@@ -274,9 +325,13 @@ void async_yield(async_ctx *self_ctx, async_state *self_state){
     
     DEBUG_PRINT("Tick has passed, we can change execution context");
 
-    // Swtich to the main thread as it's will be in an event loop
+    // Switch to the main thread as it will be in an event loop
     // that iterates over the poll and switches to the next context
+#ifdef _WIN32
     SwitchToFiber(self_state->main_thread);
+#else
+    swapcontext((ucontext_t*)self_state->async_addr, (ucontext_t*)self_ctx->state->main_thread);
+#endif
 }
 
 void async_free(async *self)

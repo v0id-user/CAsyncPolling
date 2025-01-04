@@ -4,6 +4,7 @@ project('polling_app', 'c')
 # Add compiler flags
 if host_machine.system() == 'darwin'
     add_project_arguments('-Wno-deprecated-declarations', language: 'c')
+    add_project_arguments('-Wno-incompatible-pointer-types', language: 'c')
 endif
 
 # Add _DEBUG definition when building in debug mode

@@ -17,7 +17,7 @@
 struct poll_ctx
 {
     // function contexts (for windows it's fiber in unix it's ucontext)
-    void* *contexts;
+    CONTEXT_POINTER *contexts;
     int32_t size;
     int32_t capacity;
     int32_t index;
