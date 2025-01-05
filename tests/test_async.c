@@ -9,21 +9,13 @@
 #include <unistd.h>
 #endif
 
-// Cross-platform sleep function (milliseconds)
-static void platform_sleep(unsigned int milliseconds) {
-#ifdef _WIN32
-    Sleep(milliseconds);
-#else
-    usleep(milliseconds * 1000);  // usleep takes microseconds
-#endif
-}
 
 void test_function(async_ctx *ctx, async_state *state, char *arg){
     DEBUG_PRINT("STATE PTR: %p\n", (void *)state);
     for (int i = 0; i < 5; i++) {
         // Mimic a long running function
         DEBUG_PRINT("TEST FUNCTION: %p\n", arg);
-        platform_sleep(35); // Sleep for 35ms to simulate a long running function (35ms is 35000000ns, yes this is long), the scheduler is 25ms
+        Sleep(35); // Sleep for 35ms to simulate a long running function (35ms is 35000000ns, yes this is long), the scheduler is 25ms
         // TODO: Check if calling on each loop introduces an overhead
         async_yield(ctx, state);
     }
@@ -73,14 +65,7 @@ static void test_async_create()
     // Run same function twice to test if it can be run again
 
     // TODO: Unix support
-    DEBUG_PRINT("Running async_run 1 %p", async_test_function1.f);
-    DEBUG_PRINT("Running async_run async address 1 %p", asyn);
-    DEBUG_PRINT("Running async_run function address 1 %p", asyn->async_run);
     asyn->async_run(asyn->ctx, &async_test_function1);
-
-    DEBUG_PRINT("Running async_run 2 %p", async_test_function2.f);
-    DEBUG_PRINT("Running async_run async address 2 %p", asyn);
-    DEBUG_PRINT("Running async_run function address 2 %p", asyn->async_run);
     asyn->async_run(asyn->ctx, &async_test_function2);
 
     // Wait for the functions to finish

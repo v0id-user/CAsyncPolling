@@ -2,15 +2,9 @@
 #include "pprint.h"
 #include <time.h>
 #include <stdlib.h>
-
-#ifdef _WIN32
 #include <windows.h>
-#else
-#include <sys/time.h>
-#endif
 
 static long long get_time_ms() {
-#ifdef _WIN32
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
     ULARGE_INTEGER uli;
@@ -18,11 +12,6 @@ static long long get_time_ms() {
     uli.HighPart = ft.dwHighDateTime;
     // Convert to milliseconds from 100ns intervals and adjust for Unix epoch
     return (uli.QuadPart / 10000) - 11644473600000LL;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long long)tv.tv_sec * 1000LL + (long long)tv.tv_usec / 1000LL;
-#endif
 }
 
 static bool did_time_pass(void *self) {
@@ -44,7 +33,6 @@ schedular_t *schedular_new() {
         return NULL;
     }
     schedular->did_time_pass = did_time_pass;
-    schedular->tick = get_time_ms();  // Initialize tick at creation
     return schedular;
 }
 
