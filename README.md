@@ -1,6 +1,6 @@
-# CPoll
+# CAsyncPolling
 
-A simple asynchronous polling system for C. This is an experimental project to explore my C programming capabilities.
+A lightweight, asynchronous polling system implemented in C. This experimental project aims to explore my capabilities in C programming while delving into the inner workings of asynchronous mechanisms.
 
 # (1/4/2025) Current Status
 
