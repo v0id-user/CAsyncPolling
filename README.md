@@ -1,7 +1,11 @@
 # CAsyncPolling
 
 A lightweight, asynchronous polling system implemented in C. This experimental project aims to explore my capabilities in C programming while delving into the inner workings of asynchronous mechanisms.
+<div align="center">
 
+[![MADE BY #V0ID](https://img.shields.io/badge/MADE%20BY%20%23V0ID-F3EEE1.svg?style=for-the-badge)](https://github.com/v0id-user)
+
+</div>
 # (1/4/2025) Current Status
 
 The project is almost reach stable state in [test_async.c](tests/test_async.c). You can compile the test(WINDOWS ONLY) and it will run probably, but it's not memory safe and there is memory leaks everywhere and it's not tested very well, but the concept is there.
